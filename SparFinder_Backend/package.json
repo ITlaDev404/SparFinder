@@ -1,0 +1,18 @@
+{
+  "name": "sparfinder-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.1",
+    "@elysiajs/swagger": "^1.3.1",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
+    "elysia": "latest",
+    "mysql2": "^3.20.0"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}
