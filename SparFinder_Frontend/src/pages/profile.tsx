@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../components/Toast';
+import Loader from '../components/Loader';
 
 interface User {
   id: number;
@@ -15,9 +17,13 @@ interface User {
 export default function Profile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [sports, setSports] = useState<any[]>([]);
+  const [allSports, setAllSports] = useState<any[]>([]);
+  const [selectedSport, setSelectedSport] = useState<number>(1);
   const [requests, setRequests] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     height: '',
@@ -27,27 +33,40 @@ export default function Profile() {
   });
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!user.id) {
+      navigate('/login');
+      return;
+    }
+
     const fetchProfile = async () => {
-      const res = await fetch(`/api/users/${id}`);
-      const data = await res.json();
-      if (data.length > 0) {
-        setUser(data[0]);
-        setFormData({
-          height: data[0].height?.toString() || '',
-          weight: data[0].weight?.toString() || '',
-          level: data[0].level || '',
-          location: data[0].location || '',
-        });
+      try {
+        const res = await fetch(`/api/users/${id}`);
+        const data = await res.json();
+        if (data.length > 0) {
+          setUser(data[0]);
+          setFormData({
+            height: data[0].height?.toString() || '',
+            weight: data[0].weight?.toString() || '',
+            level: data[0].level || '',
+            location: data[0].location || '',
+          });
+        }
+
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setIsOwner(currentUser.id === Number(id));
+
+        const sportsRes = await fetch(`/api/users/${id}/sports`);
+        setSports(await sportsRes.json());
+
+        const allSportsRes = await fetch('/api/users/sports');
+        setAllSports(await allSportsRes.json());
+
+        const requestsRes = await fetch(`/api/sparring/received/${id}`);
+        setRequests(await requestsRes.json());
+      } finally {
+        setLoading(false);
       }
-
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      setIsOwner(currentUser.id === Number(id));
-
-      const sportsRes = await fetch(`/api/users/${id}/sports`);
-      setSports(await sportsRes.json());
-
-      const requestsRes = await fetch(`/api/sparring/received/${id}`);
-      setRequests(await requestsRes.json());
     };
     fetchProfile();
   }, [id]);
@@ -64,7 +83,7 @@ export default function Profile() {
         location: formData.location,
       }),
     });
-    alert('Profile updated!');
+    showToast('Profil mis à jour !', 'success');
   };
 
   const handleSendRequest = async () => {
@@ -77,10 +96,10 @@ export default function Profile() {
       body: JSON.stringify({
         senderId: currentUser.id,
         receiverId: Number(id),
-        sportId: 1,
+        sportId: selectedSport,
       }),
     });
-    alert('Request sent!');
+    showToast('Demande envoyée !', 'success');
   };
 
   return (
@@ -88,7 +107,9 @@ export default function Profile() {
       <div className="max-w-2xl mx-auto">
         <button onClick={() => navigate('/search')} className="mb-4 text-blue-500">← Back</button>
         
-        {user && (
+        {loading ? (
+          <Loader />
+        ) : user && (
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h1 className="text-3xl font-bold mb-6">
               {user.firstName} {user.lastName}
@@ -147,9 +168,25 @@ export default function Profile() {
                 </button>
               </form>
             ) : (
-              <button onClick={handleSendRequest} className="w-full p-3 bg-blue-500 text-white rounded-lg font-semibold">
-                Send Sparring Request
-              </button>
+              <>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">Select Sport</label>
+                  <select
+                    value={selectedSport}
+                    onChange={(e) => setSelectedSport(Number(e.target.value))}
+                    className="w-full p-3 border rounded-lg"
+                  >
+                    {allSports.map((sport) => (
+                      <option key={sport.id} value={sport.id}>
+                        {sport.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={handleSendRequest} className="w-full p-3 bg-blue-500 text-white rounded-lg font-semibold">
+                  Send Sparring Request
+                </button>
+              </>
             )}
           </div>
         )}

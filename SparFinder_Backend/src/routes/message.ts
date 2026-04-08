@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { eq, or } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import { db } from '../db/database';
 import { message } from '../models';
 
@@ -12,8 +12,8 @@ const messageRoute = new Elysia({ prefix: '/messages' })
     const id2 = Number(user2Id);
     return await db.select().from(message).where(
       or(
-        eq(message.senderId, id1),
-        eq(message.receiverId, id2)
+        and(eq(message.senderId, id1), eq(message.receiverId, id2)),
+        and(eq(message.senderId, id2), eq(message.receiverId, id1))
       )
     );
   })

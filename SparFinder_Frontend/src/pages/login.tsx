@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useToast } from '../components/Toast';
+import Loader from '../components/Loader';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const res = await fetch('/api/users/login', {
@@ -20,12 +25,15 @@ export default function Login() {
 
       if (data.success) {
         localStorage.setItem('user', JSON.stringify(data.user));
+        showToast('Connexion réussie !', 'success');
         navigate('/search');
       } else {
         setError(data.error || 'Login failed');
       }
     } catch {
       setError('Server error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,6 +41,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-5">
       <div className="bg-white rounded-xl shadow-lg p-10 w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-8">Login</h1>
+        {loading && <Loader />}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
@@ -55,12 +64,12 @@ export default function Login() {
             />
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <button type="submit" className="p-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">
+          <button type="submit" disabled={loading} className="p-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50">
             Login
           </button>
         </form>
         <p className="text-center mt-6 text-sm">
-          Don't have an account? <a href="/signup" className="text-blue-500 font-semibold">Sign up</a>
+          Don't have an account? <Link to="/signup" className="text-blue-500 font-semibold">Sign up</Link>
         </p>
       </div>
     </div>

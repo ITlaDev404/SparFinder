@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useToast } from '../components/Toast';
+import Loader from '../components/Loader';
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -25,6 +29,7 @@ export default function SignUp() {
       return;
     }
 
+    setLoading(true);
     try {
       const res = await fetch('/api/users', {
         method: 'POST',
@@ -39,12 +44,15 @@ export default function SignUp() {
       const data = await res.json();
 
       if (data.success) {
+        showToast('Compte créé avec succès !', 'success');
         navigate('/login');
       } else {
         setError(data.error || 'Registration failed');
       }
     } catch {
       setError('Server error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +60,7 @@ export default function SignUp() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-5">
       <div className="bg-white rounded-xl shadow-lg p-10 w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-8">Sign Up</h1>
+        {loading && <Loader />}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
@@ -109,12 +118,12 @@ export default function SignUp() {
             />
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <button type="submit" className="p-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">
+          <button type="submit" disabled={loading} className="p-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50">
             Sign Up
           </button>
         </form>
         <p className="text-center mt-6 text-sm">
-          Already have an account? <a href="/login" className="text-blue-500 font-semibold">Login</a>
+          Already have an account? <Link to="/login" className="text-blue-500 font-semibold">Login</Link>
         </p>
       </div>
     </div>

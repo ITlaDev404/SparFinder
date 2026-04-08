@@ -25,13 +25,6 @@ export default function Search() {
     sport: '',
   });
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!user.id) {
-      navigate('/login');
-    }
-  }, [navigate]);
-
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await fetch('/api/users');

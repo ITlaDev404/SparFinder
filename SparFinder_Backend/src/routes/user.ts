@@ -101,6 +101,9 @@ const userRoute = new Elysia({ prefix: '/users' })
       })
     );
     return sports;
+  })
+  .get('/sports', async () => {
+    return await db.select().from(sport);
   });
 
 export default userRoute;

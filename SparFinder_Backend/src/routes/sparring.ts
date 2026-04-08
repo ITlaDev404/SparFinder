@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { eq, and, or } from 'drizzle-orm';
 import { db } from '../db/database';
-import { sparringRequest, user } from '../models';
+import { sparringRequest, user, sport } from '../models';
 
 const sparringRoute = new Elysia({ prefix: '/sparring' })
   .get('/', async () => {
@@ -9,11 +9,21 @@ const sparringRoute = new Elysia({ prefix: '/sparring' })
   })
   .get('/received/:userId', async ({ params: { userId } }) => {
     const numericId = Number(userId);
-    return await db.select().from(sparringRequest).where(eq(sparringRequest.receiverId, numericId));
+    const requests = await db.select().from(sparringRequest).where(eq(sparringRequest.receiverId, numericId));
+    return Promise.all(requests.map(async (r) => {
+      const sender = await db.select().from(user).where(eq(user.id, r.senderId));
+      const sportData = await db.select().from(sport).where(eq(sport.id, r.sportId));
+      return { ...r, sender: sender[0], sport: sportData[0] };
+    }));
   })
   .get('/sent/:userId', async ({ params: { userId } }) => {
     const numericId = Number(userId);
-    return await db.select().from(sparringRequest).where(eq(sparringRequest.senderId, numericId));
+    const requests = await db.select().from(sparringRequest).where(eq(sparringRequest.senderId, numericId));
+    return Promise.all(requests.map(async (r) => {
+      const receiver = await db.select().from(user).where(eq(user.id, r.receiverId));
+      const sportData = await db.select().from(sport).where(eq(sport.id, r.sportId));
+      return { ...r, receiver: receiver[0], sport: sportData[0] };
+    }));
   })
   .post('/', async ({ body }) => {
     const { senderId, receiverId, sportId, message } = body as {

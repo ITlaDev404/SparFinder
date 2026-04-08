@@ -61,5 +61,4 @@ INSERT INTO Sport (Name, Description) VALUES
 ('Sambo', 'Combat militaire russe'),
 ('Judo', 'Art martial japonais'),
 ('Jujitsu', 'Art martial japonais ancien'),
-('Krav Maga', 'Système de défense israëlien'),
 ('Taekwondo', 'Art martial coréen');
