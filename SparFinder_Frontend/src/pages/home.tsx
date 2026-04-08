@@ -86,12 +86,12 @@ export default function Home() {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-20 px-5">
         <div className="max-w-4xl mx-auto text-center text-white">
           <h2 className="text-4xl font-bold mb-6">Prêt à commencer ?</h2>
-          <p className="text-xl mb-8 opacity-90">Rejoignez des milliers de combattants partout en France</p>
+          <p className="text-xl mb-8 opacity-90">Rejoignez des combattants partout </p>
           <Link 
             to="/signup" 
             className="inline-block px-10 py-4 bg-white text-blue-600 rounded-xl font-bold text-lg hover:scale-105 transition-all duration-300 shadow-lg"
           >
-            Inscription gratuite
+            Inscription 
           </Link>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h4 className="text-white font-bold text-xl mb-4">SparFinder</h4>
-            <p className="text-sm">La plateforme n°1 pour trouver des partenaires de sparring</p>
+            <p className="text-sm">La plateforme  pour trouver des partenaires de sparring</p>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-4">Liens rapides</h4>
