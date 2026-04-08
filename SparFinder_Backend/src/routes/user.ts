@@ -2,9 +2,18 @@ import { Elysia, t } from 'elysia';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/database';
 import { user, userSport, sport } from '../models';
+import { hashPassword, comparePassword, generateToken, verifyToken } from '../utils/auth';
+
+const authenticate = (headers: Record<string, string | undefined>) => {
+  const token = headers['authorization']?.replace('Bearer ', '');
+  if (!token) return null;
+  return verifyToken(token);
+};
 
 const userRoute = new Elysia({ prefix: '/users' })
-  .get('/', async () => {
+  .get('/', async ({ headers }) => {
+    const payload = authenticate(headers);
+    if (!payload) return { error: 'Unauthorized' };
     return await db.select().from(user);
   })
   .get('/:id', async ({ params: { id } }) => {
@@ -19,23 +28,36 @@ const userRoute = new Elysia({ prefix: '/users' })
       lastName?: string;
     };
 
+    if (!email || !password) {
+      return { success: false, error: 'Email and password are required' };
+    }
+
+    if (password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters' };
+    }
+
     const existing = await db.select().from(user).where(eq(user.email, email));
     if (existing.length > 0) {
       return { success: false, error: 'Email already exists' };
     }
 
-    const result = await db.insert(user).values({ email, password, firstName, lastName });
+    const hashedPassword = hashPassword(password);
+    const result = await db.insert(user).values({ email, password: hashedPassword, firstName, lastName });
     return { success: true, data: result };
   }, {
     body: t.Object({
-      email: t.String(),
-      password: t.String(),
+      email: t.String({ format: 'email' }),
+      password: t.String({ minLength: 6 }),
       firstName: t.Optional(t.String()),
       lastName: t.Optional(t.String()),
     })
   })
   .post('/login', async ({ body }) => {
     const { email, password } = body as { email: string; password: string };
+
+    if (!email || !password) {
+      return { success: false, error: 'Email and password are required' };
+    }
 
     const result = await db.select().from(user).where(eq(user.email, email));
 
@@ -44,18 +66,23 @@ const userRoute = new Elysia({ prefix: '/users' })
     }
 
     const foundUser = result[0];
-    if (foundUser.password !== password) {
+    if (!comparePassword(password, foundUser.password)) {
       return { success: false, error: 'Invalid password' };
     }
 
-    return { success: true, user: { id: foundUser.id, email: foundUser.email, firstName: foundUser.firstName } };
+    const token = generateToken({ id: foundUser.id, email: foundUser.email });
+    return { success: true, token, user: { id: foundUser.id, email: foundUser.email, firstName: foundUser.firstName } };
   }, {
     body: t.Object({
       email: t.String(),
       password: t.String(),
     })
   })
-  .put('/:id', async ({ params: { id }, body }) => {
+  .put('/:id', async ({ params: { id }, headers, body }) => {
+    const payload = authenticate(headers);
+    if (!payload) return { error: 'Unauthorized' };
+    if (payload.id !== Number(id)) return { error: 'Forbidden' };
+
     const numericId = Number(id);
     const { firstName, lastName, height, weight, level, location } = body as {
       firstName?: string;
@@ -77,11 +104,19 @@ const userRoute = new Elysia({ prefix: '/users' })
       location: t.Optional(t.String()),
     })
   })
-  .delete('/:id', async ({ params: { id } }) => {
+  .delete('/:id', async ({ params: { id }, headers }) => {
+    const payload = authenticate(headers);
+    if (!payload) return { error: 'Unauthorized' };
+    if (payload.id !== Number(id)) return { error: 'Forbidden' };
+
     const numericId = Number(id);
     return { success: true, data: await db.delete(user).where(eq(user.id, numericId)) };
   })
-  .post('/:id/sports', async ({ params: { id }, body }) => {
+  .post('/:id/sports', async ({ params: { id }, headers, body }) => {
+    const payload = authenticate(headers);
+    if (!payload) return { error: 'Unauthorized' };
+    if (payload.id !== Number(id)) return { error: 'Forbidden' };
+
     const numericId = Number(id);
     const { sportId } = body as { sportId: number };
 

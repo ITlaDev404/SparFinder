@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiCall } from '../utils/api';
 
 interface User {
   id: number;
@@ -27,32 +28,40 @@ export default function Search() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch('/api/users');
-    let data = await res.json();
+    const data = await apiCall('/users');
+
+    if (data.error) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      navigate('/login');
+      return;
+    }
+
+    let filtered = data;
 
     if (filters.minHeight) {
-      data = data.filter((u: User) => u.height >= Number(filters.minHeight));
+      filtered = filtered.filter((u: User) => u.height >= Number(filters.minHeight));
     }
     if (filters.maxHeight) {
-      data = data.filter((u: User) => u.height <= Number(filters.maxHeight));
+      filtered = filtered.filter((u: User) => u.height <= Number(filters.maxHeight));
     }
     if (filters.minWeight) {
-      data = data.filter((u: User) => u.weight >= Number(filters.minWeight));
+      filtered = filtered.filter((u: User) => u.weight >= Number(filters.minWeight));
     }
     if (filters.maxWeight) {
-      data = data.filter((u: User) => u.weight <= Number(filters.maxWeight));
+      filtered = filtered.filter((u: User) => u.weight <= Number(filters.maxWeight));
     }
     if (filters.level) {
-      data = data.filter((u: User) => u.level?.toLowerCase().includes(filters.level.toLowerCase()));
+      filtered = filtered.filter((u: User) => u.level?.toLowerCase().includes(filters.level.toLowerCase()));
     }
     if (filters.location) {
-      data = data.filter((u: User) => u.location?.toLowerCase().includes(filters.location.toLowerCase()));
+      filtered = filtered.filter((u: User) => u.location?.toLowerCase().includes(filters.location.toLowerCase()));
     }
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-    data = data.filter((u: User) => u.id !== currentUser.id);
+    filtered = filtered.filter((u: User) => u.id !== currentUser.id);
 
-    setUsers(data);
+    setUsers(filtered);
   };
 
   return (
@@ -63,6 +72,7 @@ export default function Search() {
           <button
             onClick={() => {
               localStorage.removeItem('user');
+              localStorage.removeItem('token');
               navigate('/login');
             }}
             className="px-4 py-2 bg-red-500 text-white rounded-lg"

@@ -25,6 +25,7 @@ export default function Login() {
 
       if (data.success) {
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
         showToast('Connexion réussie !', 'success');
         navigate('/search');
       } else {
