@@ -10,8 +10,14 @@ interface User {
   height: number;
   weight: number;
   level: string;
-  location: string;
+  country: string;
+  region: string;
 }
+
+const countries = [
+  'France', 'Belgique', 'Suisse', 'Canada', 'Maroc', 'Algérie', 'Tunisie',
+  'Espagne', 'Italie', 'Allemagne', 'Royaume-Uni', 'Portugal', 'Brésil'
+];
 
 export default function Search() {
   const navigate = useNavigate();
@@ -22,7 +28,7 @@ export default function Search() {
     minWeight: '',
     maxWeight: '',
     level: '',
-    location: '',
+    country: '',
     sport: '',
   });
 
@@ -54,8 +60,8 @@ export default function Search() {
     if (filters.level) {
       filtered = filtered.filter((u: User) => u.level?.toLowerCase().includes(filters.level.toLowerCase()));
     }
-    if (filters.location) {
-      filtered = filtered.filter((u: User) => u.location?.toLowerCase().includes(filters.location.toLowerCase()));
+    if (filters.country) {
+      filtered = filtered.filter((u: User) => u.country?.toLowerCase() === filters.country.toLowerCase());
     }
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -68,7 +74,7 @@ export default function Search() {
     <div className="min-h-screen bg-gray-100 p-5">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Find Sparring Partners</h1>
+          <h1 className="text-3xl font-bold">Rechercher des partenaires</h1>
           <button
             onClick={() => {
               localStorage.removeItem('user');
@@ -77,57 +83,60 @@ export default function Search() {
             }}
             className="px-4 py-2 bg-red-500 text-white rounded-lg"
           >
-            Logout
+            Déconnexion
           </button>
         </div>
 
         <form onSubmit={handleSearch} className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <input
               type="number"
-              placeholder="Min Height (cm)"
+              placeholder="Taille min (cm)"
               value={filters.minHeight}
               onChange={(e) => setFilters({ ...filters, minHeight: e.target.value })}
               className="p-3 border rounded-lg"
             />
             <input
               type="number"
-              placeholder="Max Height (cm)"
+              placeholder="Taille max (cm)"
               value={filters.maxHeight}
               onChange={(e) => setFilters({ ...filters, maxHeight: e.target.value })}
               className="p-3 border rounded-lg"
             />
             <input
               type="number"
-              placeholder="Min Weight (kg)"
+              placeholder="Poids min (kg)"
               value={filters.minWeight}
               onChange={(e) => setFilters({ ...filters, minWeight: e.target.value })}
               className="p-3 border rounded-lg"
             />
             <input
               type="number"
-              placeholder="Max Weight (kg)"
+              placeholder="Poids max (kg)"
               value={filters.maxWeight}
               onChange={(e) => setFilters({ ...filters, maxWeight: e.target.value })}
               className="p-3 border rounded-lg"
             />
             <input
               type="text"
-              placeholder="Level"
+              placeholder="Niveau"
               value={filters.level}
               onChange={(e) => setFilters({ ...filters, level: e.target.value })}
               className="p-3 border rounded-lg"
             />
-            <input
-              type="text"
-              placeholder="Location"
-              value={filters.location}
-              onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+            <select
+              value={filters.country}
+              onChange={(e) => setFilters({ ...filters, country: e.target.value })}
               className="p-3 border rounded-lg"
-            />
+            >
+              <option value="">Tous les pays</option>
+              {countries.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
           <button type="submit" className="mt-4 w-full p-3 bg-blue-500 text-white rounded-lg font-semibold">
-            Search
+            Rechercher
           </button>
         </form>
 
@@ -138,22 +147,22 @@ export default function Search() {
                 {user.firstName} {user.lastName}
               </h3>
               <div className="text-gray-600 space-y-1 mb-4">
-                <p>📏 {user.height} cm | ⚖️ {user.weight} kg</p>
-                <p>🏆 {user.level}</p>
-                <p>📍 {user.location}</p>
+                <p>📏 {user.height || '-'} cm | ⚖️ {user.weight || '-'} kg</p>
+                <p>🏆 {user.level || '-'}</p>
+                <p>📍 {user.country}{user.region ? `, ${user.region}` : ''}</p>
               </div>
               <button
                 onClick={() => navigate(`/profile/${user.id}`)}
                 className="w-full p-3 bg-blue-500 text-white rounded-lg font-semibold"
               >
-                View Profile
+                Voir le profil
               </button>
             </div>
           ))}
         </div>
 
         {users.length === 0 && (
-          <p className="text-center text-gray-500 mt-10">No partners found. Try adjusting your filters.</p>
+          <p className="text-center text-gray-500 mt-10">Aucun partenaire trouvé. Essayez d'autres critères.</p>
         )}
       </div>
     </div>

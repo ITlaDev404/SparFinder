@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../db/database';
 import { user, userSport, sport } from '../models';
 import { hashPassword, comparePassword, generateToken, verifyToken } from '../utils/auth';
@@ -84,16 +84,17 @@ const userRoute = new Elysia({ prefix: '/users' })
     if (payload.id !== Number(id)) return { error: 'Forbidden' };
 
     const numericId = Number(id);
-    const { firstName, lastName, height, weight, level, location } = body as {
+    const { firstName, lastName, height, weight, level, country, region } = body as {
       firstName?: string;
       lastName?: string;
       height?: number;
       weight?: number;
       level?: string;
-      location?: string;
+      country?: string;
+      region?: string;
     };
 
-    return { success: true, data: await db.update(user).set({ firstName, lastName, height, weight, level, location }).where(eq(user.id, numericId)) };
+    return { success: true, data: await db.update(user).set({ firstName, lastName, height, weight, level, country, region }).where(eq(user.id, numericId)) };
   }, {
     body: t.Object({
       firstName: t.Optional(t.String()),
@@ -101,7 +102,8 @@ const userRoute = new Elysia({ prefix: '/users' })
       height: t.Optional(t.Number()),
       weight: t.Optional(t.Number()),
       level: t.Optional(t.String()),
-      location: t.Optional(t.String()),
+      country: t.Optional(t.String()),
+      region: t.Optional(t.String()),
     })
   })
   .delete('/:id', async ({ params: { id }, headers }) => {
@@ -125,6 +127,16 @@ const userRoute = new Elysia({ prefix: '/users' })
     body: t.Object({
       sportId: t.Number(),
     })
+  })
+  .delete('/:id/sports/:sportId', async ({ params: { id, sportId }, headers }) => {
+    const payload = authenticate(headers);
+    if (!payload) return { error: 'Unauthorized' };
+    if (payload.id !== Number(id)) return { error: 'Forbidden' };
+
+    const numericId = Number(id);
+    const numericSportId = Number(sportId);
+
+    return { success: true, data: await db.delete(userSport).where(and(eq(userSport.userId, numericId), eq(userSport.sportId, numericSportId))) };
   })
   .get('/:id/sports', async ({ params: { id } }) => {
     const numericId = Number(id);

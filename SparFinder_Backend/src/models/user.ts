@@ -9,7 +9,8 @@ export const user = mysqlTable('User', {
   height: int('Height'),
   weight: int('Weight'),
   level: varchar('Level', { length: 50 }),
-  location: varchar('Location', { length: 255 }),
+  country: varchar('Country', { length: 100 }),
+  region: varchar('Region', { length: 100 }),
 });
 
 export type User = typeof user.$inferSelect;

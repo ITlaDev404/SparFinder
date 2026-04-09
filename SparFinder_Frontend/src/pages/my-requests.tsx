@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiCall } from '../utils/api';
 
 interface Request {
   id: number;
@@ -32,20 +33,28 @@ export default function MyRequests() {
 
   const loadRequests = async (userId: number) => {
     const [recv, sentRes] = await Promise.all([
-      fetch(`/api/sparring/received/${userId}`).then(r => r.json()),
-      fetch(`/api/sparring/sent/${userId}`).then(r => r.json())
+      apiCall(`/sparring/received/${userId}`),
+      apiCall(`/sparring/sent/${userId}`)
     ]);
-    setReceived(recv);
-    setSent(sentRes);
+
+    if (recv.error) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      navigate('/login');
+      return;
+    }
+
+    setReceived(Array.isArray(recv) ? recv : []);
+    setSent(Array.isArray(sentRes) ? sentRes : []);
   };
 
   const handleAccept = async (id: number) => {
-    await fetch(`/api/sparring/${id}/accept`, { method: 'PUT' });
+    await apiCall(`/sparring/${id}/accept`, { method: 'PUT' });
     loadRequests(currentUser!.id);
   };
 
   const handleReject = async (id: number) => {
-    await fetch(`/api/sparring/${id}/reject`, { method: 'PUT' });
+    await apiCall(`/sparring/${id}/reject`, { method: 'PUT' });
     loadRequests(currentUser!.id);
   };
 

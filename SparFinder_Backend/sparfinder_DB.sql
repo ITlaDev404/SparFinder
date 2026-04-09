@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS User (
     Height INT,
     Weight INT,
     Level VARCHAR(50),
-    Location VARCHAR(255),
+    Country VARCHAR(100),
+    Region VARCHAR(100),
     INDEX idx_email (Email)
 );
 
@@ -25,7 +26,8 @@ CREATE TABLE IF NOT EXISTS UserSport (
     UserID INT NOT NULL,
     SportID INT NOT NULL,
     FOREIGN KEY (UserID) REFERENCES User(ID) ON DELETE CASCADE,
-    FOREIGN KEY (SportID) REFERENCES Sport(ID) ON DELETE CASCADE
+    FOREIGN KEY (SportID) REFERENCES Sport(ID) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_sport (UserID, SportID)
 );
 
 CREATE TABLE IF NOT EXISTS SparringRequest (
@@ -62,3 +64,7 @@ INSERT INTO Sport (Name, Description) VALUES
 ('Judo', 'Art martial japonais'),
 ('Jujitsu', 'Art martial japonais ancien'),
 ('Taekwondo', 'Art martial coréen');
+
+-- Ajouter les colonnes Country et Region si la table existe déjà
+-- ALTER TABLE User ADD COLUMN Country VARCHAR(100) AFTER Level;
+-- ALTER TABLE User ADD COLUMN Region VARCHAR(100) AFTER Country;

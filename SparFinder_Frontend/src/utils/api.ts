@@ -15,10 +15,15 @@ export async function apiCall(endpoint: string, options: RequestOptions = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  const fetchOptions: RequestInit = {
     ...options,
     headers,
-  });
+  };
 
+  if (options.body) {
+    fetchOptions.body = JSON.stringify(options.body);
+  }
+
+  const res = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
   return res.json();
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { apiCall } from '../utils/api';
 
 interface Message {
   id: number;
@@ -32,12 +33,11 @@ export default function Chat() {
     setCurrentUser(user);
 
     const loadChat = async () => {
-      const otherRes = await fetch(`/api/users/${userId}`);
-      const otherData = await otherRes.json();
-      setOtherUser(otherData[0]);
+      const otherRes = await apiCall(`/users/${userId}`);
+      setOtherUser(Array.isArray(otherRes) ? otherRes[0] : null);
 
-      const msgRes = await fetch(`/api/messages/conversation/${user.id}/${userId}`);
-      setMessages(await msgRes.json());
+      const msgRes = await apiCall(`/messages/conversation/${user.id}/${userId}`);
+      setMessages(Array.isArray(msgRes) ? msgRes : []);
     };
     loadChat();
   }, [navigate, userId]);
@@ -46,19 +46,18 @@ export default function Chat() {
     e.preventDefault();
     if (!newMessage.trim() || !currentUser) return;
 
-    await fetch('/api/messages', {
+    await apiCall('/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      body: {
         senderId: currentUser.id,
         receiverId: Number(userId),
         content: newMessage
-      })
+      }
     });
 
     setNewMessage('');
-    const msgRes = await fetch(`/api/messages/conversation/${currentUser.id}/${userId}`);
-    setMessages(await msgRes.json());
+    const msgRes = await apiCall(`/messages/conversation/${currentUser.id}/${userId}`);
+    setMessages(Array.isArray(msgRes) ? msgRes : []);
   };
 
   return (

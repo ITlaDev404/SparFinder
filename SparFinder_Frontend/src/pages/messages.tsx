@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiCall } from '../utils/api';
 
 interface User {
   id: number;
@@ -23,10 +24,18 @@ export default function Messages() {
   }, [navigate]);
 
   const loadConversations = async (userId: number) => {
-    const allMessages = await fetch('/api/messages').then(r => r.json());
+    const allMessages = await apiCall('/messages');
+    
+    if (allMessages.error) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      navigate('/login');
+      return;
+    }
+
     const userIds = new Set<number>();
     
-    allMessages
+    (Array.isArray(allMessages) ? allMessages : [])
       .filter((m: any) => m.senderId === userId || m.receiverId === userId)
       .forEach((m: any) => {
         if (m.senderId === userId) userIds.add(m.receiverId);
@@ -35,8 +44,8 @@ export default function Messages() {
 
     const users = await Promise.all(
       Array.from(userIds).map(async (id) => {
-        const res = await fetch(`/api/users/${id}`);
-        return (await res.json())[0];
+        const res = await apiCall(`/users/${id}`);
+        return Array.isArray(res) ? res[0] : null;
       })
     );
     setConversations(users.filter(Boolean));
