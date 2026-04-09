@@ -6,12 +6,15 @@ interface User {
   id: number;
   firstName: string;
   lastName: string;
+  country: string;
+  region: string;
 }
 
 export default function Messages() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<{ id: number } | null>(null);
   const [conversations, setConversations] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -24,23 +27,26 @@ export default function Messages() {
   }, [navigate]);
 
   const loadConversations = async (userId: number) => {
-    const allMessages = await apiCall('/messages');
+    setLoading(true);
     
-    if (allMessages.error) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      navigate('/login');
-      return;
-    }
+    const [received, sent] = await Promise.all([
+      apiCall(`/sparring/received/${userId}`),
+      apiCall(`/sparring/sent/${userId}`)
+    ]);
 
     const userIds = new Set<number>();
-    
-    (Array.isArray(allMessages) ? allMessages : [])
-      .filter((m: any) => m.senderId === userId || m.receiverId === userId)
-      .forEach((m: any) => {
-        if (m.senderId === userId) userIds.add(m.receiverId);
-        else userIds.add(m.senderId);
-      });
+
+    if (Array.isArray(received)) {
+      received
+        .filter((r: any) => r.status === 'accepted')
+        .forEach((r: any) => userIds.add(r.senderId));
+    }
+
+    if (Array.isArray(sent)) {
+      sent
+        .filter((r: any) => r.status === 'accepted')
+        .forEach((r: any) => userIds.add(r.receiverId));
+    }
 
     const users = await Promise.all(
       Array.from(userIds).map(async (id) => {
@@ -49,6 +55,7 @@ export default function Messages() {
       })
     );
     setConversations(users.filter(Boolean));
+    setLoading(false);
   };
 
   return (
@@ -59,21 +66,29 @@ export default function Messages() {
           <button onClick={() => navigate('/search')} className="text-blue-500">← Retour</button>
         </div>
 
-        <div className="space-y-4">
-          {conversations.map((user) => (
-            <div
-              key={user.id}
-              onClick={() => navigate(`/chat/${user.id}`)}
-              className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:bg-gray-50"
-            >
-              <h3 className="text-xl font-bold">{user.firstName} {user.lastName}</h3>
-            </div>
-          ))}
+        {loading ? (
+          <p className="text-center text-gray-500">Chargement...</p>
+        ) : (
+          <div className="space-y-4">
+            {conversations.map((user) => (
+              <div
+                key={user.id}
+                onClick={() => navigate(`/chat/${user.id}`)}
+                className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:bg-gray-50"
+              >
+                <h3 className="text-xl font-bold">{user.firstName} {user.lastName}</h3>
+                <p className="text-gray-500 text-sm">{user.country}{user.region ? `, ${user.region}` : ''}</p>
+              </div>
+            ))}
 
-          {conversations.length === 0 && (
-            <p className="text-center text-gray-500 py-10">Aucun message</p>
-          )}
-        </div>
+            {conversations.length === 0 && (
+              <div className="text-center py-10">
+                <p className="text-gray-500 mb-4">Aucune conversation</p>
+                <p className="text-sm text-gray-400">Acceptez des demandes de sparring pour discuter</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

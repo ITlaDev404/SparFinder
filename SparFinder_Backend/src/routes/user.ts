@@ -10,6 +10,11 @@ const authenticate = (headers: Record<string, string | undefined>) => {
   return verifyToken(token);
 };
 
+const isAdmin = async (userId: number): Promise<boolean> => {
+  const result = await db.select().from(user).where(eq(user.id, userId));
+  return result.length > 0 && result[0].isAdmin === 'true';
+};
+
 const userRoute = new Elysia({ prefix: '/users' })
   .get('/', async ({ headers }) => {
     const payload = authenticate(headers);
@@ -71,7 +76,16 @@ const userRoute = new Elysia({ prefix: '/users' })
     }
 
     const token = generateToken({ id: foundUser.id, email: foundUser.email });
-    return { success: true, token, user: { id: foundUser.id, email: foundUser.email, firstName: foundUser.firstName } };
+    return { 
+      success: true, 
+      token, 
+      user: { 
+        id: foundUser.id, 
+        email: foundUser.email, 
+        firstName: foundUser.firstName,
+        isAdmin: foundUser.isAdmin === 'true'
+      } 
+    };
   }, {
     body: t.Object({
       email: t.String(),
@@ -81,9 +95,12 @@ const userRoute = new Elysia({ prefix: '/users' })
   .put('/:id', async ({ params: { id }, headers, body }) => {
     const payload = authenticate(headers);
     if (!payload) return { error: 'Unauthorized' };
-    if (payload.id !== Number(id)) return { error: 'Forbidden' };
-
+    
     const numericId = Number(id);
+    const isUserAdmin = await isAdmin(payload.id);
+    
+    if (payload.id !== numericId && !isUserAdmin) return { error: 'Forbidden' };
+
     const { firstName, lastName, height, weight, level, country, region } = body as {
       firstName?: string;
       lastName?: string;
@@ -109,9 +126,12 @@ const userRoute = new Elysia({ prefix: '/users' })
   .delete('/:id', async ({ params: { id }, headers }) => {
     const payload = authenticate(headers);
     if (!payload) return { error: 'Unauthorized' };
-    if (payload.id !== Number(id)) return { error: 'Forbidden' };
-
+    
     const numericId = Number(id);
+    const isUserAdmin = await isAdmin(payload.id);
+    
+    if (payload.id !== numericId && !isUserAdmin) return { error: 'Forbidden' };
+
     return { success: true, data: await db.delete(user).where(eq(user.id, numericId)) };
   })
   .post('/:id/sports', async ({ params: { id }, headers, body }) => {

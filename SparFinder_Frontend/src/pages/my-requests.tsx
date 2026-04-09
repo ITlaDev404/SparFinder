@@ -109,7 +109,7 @@ export default function MyRequests() {
               )}
 
               {activeTab === 'received' && req.status === 'pending' && (
-                <div className="flex gap-4">
+                <div className="flex gap-4 mt-4">
                   <button
                     onClick={() => handleAccept(req.id)}
                     className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600"
@@ -123,6 +123,15 @@ export default function MyRequests() {
                     Refuser
                   </button>
                 </div>
+              )}
+
+              {req.status === 'accepted' && (
+                <button
+                  onClick={() => navigate(`/chat/${activeTab === 'received' ? req.senderId : req.receiverId}`)}
+                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"
+                >
+                  Envoyer un message
+                </button>
               )}
             </div>
           ))}

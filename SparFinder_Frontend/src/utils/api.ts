@@ -16,7 +16,7 @@ export async function apiCall(endpoint: string, options: RequestOptions = {}) {
   }
 
   const fetchOptions: RequestInit = {
-    ...options,
+    method: options.method || 'GET',
     headers,
   };
 

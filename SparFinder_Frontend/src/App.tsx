@@ -7,6 +7,7 @@ import Search from './pages/search';
 import MyRequests from './pages/my-requests';
 import Messages from './pages/messages';
 import Chat from './pages/chat';
+import Admin from './pages/admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import { ToastProvider } from './components/Toast';
@@ -38,6 +39,11 @@ function App() {
           <Route path="/chat/:userId" element={
             <ProtectedRoute>
               <Chat />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <Admin />
             </ProtectedRoute>
           } />
           <Route path="/profile/:id" element={

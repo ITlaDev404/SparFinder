@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiCall } from '../utils/api';
+import { useToast } from '../components/Toast';
 
 interface Message {
   id: number;
@@ -19,10 +20,13 @@ interface User {
 export default function Chat() {
   const navigate = useNavigate();
   const { userId } = useParams();
+  const { showToast } = useToast();
   const [currentUser, setCurrentUser] = useState<{ id: number } | null>(null);
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -42,22 +46,37 @@ export default function Chat() {
     loadChat();
   }, [navigate, userId]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !currentUser) return;
 
-    await apiCall('/messages', {
-      method: 'POST',
-      body: {
-        senderId: currentUser.id,
-        receiverId: Number(userId),
-        content: newMessage
-      }
-    });
+    setLoading(true);
+    try {
+      const result = await apiCall('/messages', {
+        method: 'POST',
+        body: {
+          senderId: currentUser.id,
+          receiverId: Number(userId),
+          content: newMessage
+        }
+      });
 
-    setNewMessage('');
-    const msgRes = await apiCall(`/messages/conversation/${currentUser.id}/${userId}`);
-    setMessages(Array.isArray(msgRes) ? msgRes : []);
+      if (result.error) {
+        showToast(result.error, 'error');
+      } else {
+        setNewMessage('');
+        const msgRes = await apiCall(`/messages/conversation/${currentUser.id}/${userId}`);
+        setMessages(Array.isArray(msgRes) ? msgRes : []);
+      }
+    } catch (err) {
+      showToast('Erreur lors de l\'envoi', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,6 +99,7 @@ export default function Chat() {
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       <form onSubmit={handleSend} className="bg-white p-4 flex gap-2">
@@ -89,9 +109,10 @@ export default function Chat() {
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Tapez votre message..."
           className="flex-1 p-3 border rounded-lg"
+          disabled={loading}
         />
-        <button type="submit" className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold">
-          Envoyer
+        <button type="submit" disabled={loading || !newMessage.trim()} className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold disabled:opacity-50">
+          {loading ? '...' : 'Envoyer'}
         </button>
       </form>
     </div>

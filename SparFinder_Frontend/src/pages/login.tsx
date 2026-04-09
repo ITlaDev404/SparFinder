@@ -27,7 +27,7 @@ export default function Login() {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
         showToast('Connexion réussie !', 'success');
-        navigate('/search');
+        navigate(data.user.isAdmin ? '/admin' : '/search');
       } else {
         setError(data.error || 'Login failed');
       }

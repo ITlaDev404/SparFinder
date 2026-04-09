@@ -11,6 +11,7 @@ export const user = mysqlTable('User', {
   level: varchar('Level', { length: 50 }),
   country: varchar('Country', { length: 100 }),
   region: varchar('Region', { length: 100 }),
+  isAdmin: varchar('IsAdmin', { length: 10 }).default('false'),
 });
 
 export type User = typeof user.$inferSelect;

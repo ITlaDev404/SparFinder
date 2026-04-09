@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS User (
     Level VARCHAR(50),
     Country VARCHAR(100),
     Region VARCHAR(100),
+    IsAdmin VARCHAR(10) DEFAULT 'false',
     INDEX idx_email (Email)
 );
 
@@ -63,8 +64,8 @@ INSERT INTO Sport (Name, Description) VALUES
 ('Sambo', 'Combat militaire russe'),
 ('Judo', 'Art martial japonais'),
 ('Jujitsu', 'Art martial japonais ancien'),
+('Krav Maga', 'Système de défense israelien'),
 ('Taekwondo', 'Art martial coréen');
 
--- Ajouter les colonnes Country et Region si la table existe déjà
--- ALTER TABLE User ADD COLUMN Country VARCHAR(100) AFTER Level;
--- ALTER TABLE User ADD COLUMN Region VARCHAR(100) AFTER Country;
+-- Mettre un utilisateur en admin (remplacer email par l'email souhaité)
+-- UPDATE User SET IsAdmin = 'true' WHERE Email = 'admin@example.com';

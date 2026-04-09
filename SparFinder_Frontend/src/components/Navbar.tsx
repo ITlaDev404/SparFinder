@@ -32,6 +32,9 @@ export default function Navbar() {
           <Link to="/search" className="text-gray-700 hover:text-blue-500 block py-2">Rechercher</Link>
           <Link to="/my-requests" className="text-gray-700 hover:text-blue-500 block py-2">Demandes</Link>
           <Link to="/messages" className="text-gray-700 hover:text-blue-500 block py-2">Messages</Link>
+          {user.isAdmin && (
+            <Link to="/admin" className="text-red-600 hover:text-red-800 block py-2 font-semibold">Admin</Link>
+          )}
           <Link to={`/profile/${user.id}`} className="text-gray-700 hover:text-blue-500 block py-2">
             {user.firstName || 'Profil'}
           </Link>
