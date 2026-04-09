@@ -27,7 +27,7 @@ const regions: Record<string, string[]> = {
   'Suisse': ['Zurich', 'Genève', 'Vaud', 'Berne'],
   'Canada': ['Québec', 'Ontario', 'Colombie-Britannique', 'Alberta'],
   'Maroc': ['Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger'],
-  'Belgique': ['Bruxelles', 'Wallonie', 'Flandre'],
+  
 };
 
 export default function Profile() {
