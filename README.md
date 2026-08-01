@@ -15,7 +15,7 @@
 
 ## 1. Présentation du Projet
 
-**SparFinder** est une application web complète permettant aux combattants de trouver des partenaires d'entraînement (sparring partners) dans les sports de combat.
+**SparFinder** est une application web complète permettant aux utilisateurs de trouver des partenaires d'entraînement (sparring partners) dans les sports de combat.
 
 ### Fonctionnalités principales :
 - Inscription/Connexion utilisateur
